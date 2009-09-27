@@ -65,6 +65,9 @@ if {"" == $return_url} { set return_url [export_vars -base "/intranet-timesheet2
 # Calculate the start and end of the week.
 # ---------------------------------------------------------
 
+# Depends on locale
+set first_day_of_week [lc_get firstdayofweek]
+
 set julian_week_start $julian_date
 set julian_week_end $julian_date
 set h_day_in_dayweek "h.day::date = to_date(:julian_date, 'J')"
@@ -73,8 +76,8 @@ if {$show_week_p} {
     # Find Sunday (=American week start) and Saturday (=American week end)
     # for the current week by adding or subtracting days depending on the weekday (to_char(.., 'D'))
     set day_of_week [db_string dow "select to_char(to_date(:julian_date, 'J'), 'D')"]
-    set julian_week_start [expr $julian_date + 1 - $day_of_week]
-    set julian_week_end [expr $julian_date + (7-$day_of_week)]
+    set julian_week_start [expr $julian_date + 1 - $day_of_week + $first_day_of_week]
+    set julian_week_end [expr $julian_date + (7-$day_of_week) + $first_day_of_week]
 
     # Reset the day to the start of the week.
     set julian_date $julian_week_start

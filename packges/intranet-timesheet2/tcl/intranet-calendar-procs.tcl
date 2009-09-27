@@ -42,7 +42,17 @@ ad_proc calendar_get_info_from_db {
 
     # If no date was passed in, let's set it to today
     if { $the_date == "" } {
-	set the_date [db_string sysdate_from_dual "select trunc(sysdate) from dual"]
+	    set the_date [db_string sysdate_from_dual "select trunc(sysdate) from dual"]
+    }
+    
+    # Depends on locale
+    set first_day_of_week [lc_get firstdayofweek]
+
+    if {$first_day_of_week > 0 && $first_day_of_week <7} {
+        set add_days [expr 7 - $first_day_of_week]
+        set query_first_day_of_month "mod(cast(extract(dow from trunc(to_date(:the_date, 'yyyy-mm-dd'), 'Month')) as numeric)+$add_days,7)+1 as first_day_of_month,"
+    } else {
+        set query_first_day_of_month "to_char(trunc(to_date(:the_date, 'yyyy-mm-dd'), 'Month'), 'D') as first_day_of_month,"
     }
 
     # This query gets us all of the date information we need to calculate
@@ -54,7 +64,8 @@ ad_proc calendar_get_info_from_db {
     to_char(trunc(to_date(:the_date, 'yyyy-mm-dd'), 'Month'), 'YYYY') as year, 
     to_char(trunc(to_date(:the_date, 'yyyy-mm-dd'), 'Month'), 'J') as first_julian_date_of_month, 
     to_char(last_day(to_date(:the_date, 'yyyy-mm-dd')), 'DD') as num_days_in_month,
-    to_char(trunc(to_date(:the_date, 'yyyy-mm-dd'), 'Month'), 'D') as first_day_of_month, 
+    -- to_char(trunc(to_date(:the_date, 'yyyy-mm-dd'), 'Month'), 'D') as first_day_of_month,
+    $query_first_day_of_month 
     to_char(last_day(to_date(:the_date, 'yyyy-mm-dd')), 'DD') as last_day,
     trunc(add_months(to_date(:the_date, 'yyyy-mm-dd'), 1),'Day') as next_month,
     trunc(add_months(to_date(:the_date, 'yyyy-mm-dd'), -1),'Day') as prev_month,
@@ -187,8 +198,15 @@ represents the details.
     </tr>
     <tr class='day_header'>"
 
-    foreach day_of_week $days_of_week {
-	append output "<td width=14% align=center>$day_of_week</td>"
+    # Depends on locale
+    set first_day_of_week [lc_get firstdayofweek]
+    
+    for {set i $first_day_of_week} {$i < 7 } {incr i} {
+        append output "<td width=14% align=center>[lindex $days_of_week $i]</td>"
+    }
+
+    for {set i 0} {$i < $first_day_of_week} {incr i} {
+        append output "<td width=14% align=center>[lindex $days_of_week $i]</td>"
     }
 
     append output "</tr><tr>"
