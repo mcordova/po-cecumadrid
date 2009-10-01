@@ -1,3 +1,6 @@
+<if @developer_support_p@ true>
+  <include src="/packages/acs-developer-support/lib/toolbar">
+</if>
 <%= [im_header $title $header_stuff] %>
 <%= [im_navbar -show_context_help_p $show_context_help_p $main_navbar_label] %>
 <%= $sub_navbar %>
@@ -39,13 +42,6 @@
 </else>
 <%= [im_footer] %>
 
-
-
-
-
-
-
-
-
-
-
+<if @developer_support_p@ true>
+  <include src="/packages/acs-developer-support/lib/footer">
+</if>
